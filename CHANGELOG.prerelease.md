@@ -1,3 +1,23 @@
+## 10.6.0-alpha.4
+
+- Angular: Serve ancestor node_modules for addon-vitest in browser mode - [#35600](https://github.com/storybookjs/storybook/pull/35600), thanks @brandonroberts!
+- Build: Fix repository.directory path in create-storybook package.json - [#35596](https://github.com/storybookjs/storybook/pull/35596), thanks @LHMQ878!
+- CLI: Update AI setup instructions to msw-storybook-addon v3 - [#35512](https://github.com/storybookjs/storybook/pull/35512), thanks @yannbf!
+- Core: Define shared public toolsets (defineToolset) - [#35516](https://github.com/storybookjs/storybook/pull/35516), thanks @ghengeveld!
+- Core: Include null union members as enum options in TS argTypes conversion - [#35599](https://github.com/storybookjs/storybook/pull/35599), thanks @solp721!
+- Core: Move docgen JSDoc parser into csf-tools - [#35623](https://github.com/storybookjs/storybook/pull/35623), thanks @huang-julien!
+- Core: Upgrade `ws` to fix security advisories - [#35584](https://github.com/storybookjs/storybook/pull/35584), thanks @ndelangen!
+- Dependencies: Bump magic-string from 0.30.21 to 1.1.0 - [#35559](https://github.com/storybookjs/storybook/pull/35559), thanks @wojtekmaj!
+- Dependencies: Pin `@testing-library/jest-dom` to `6.9.1` - [#35614](https://github.com/storybookjs/storybook/pull/35614), thanks @ndelangen!
+- ESLint Plugin: Add plugin meta and document oxlint usage - [#35655](https://github.com/storybookjs/storybook/pull/35655), thanks @yannbf!
+- NextJS: Normalize trailing slash in the next/link mock - [#35589](https://github.com/storybookjs/storybook/pull/35589), thanks @sobol-sudo!
+- TanStack: Preserve explicit route ids on pathful clones - [#35499](https://github.com/storybookjs/storybook/pull/35499), thanks @unpunnyfuns!
+- TanStack: Resolve mock redirects through Vite's resolver - [#35501](https://github.com/storybookjs/storybook/pull/35501), thanks @unpunnyfuns!
+- Test: Fix Illegal invocation when reading prototype.focus - [#35528](https://github.com/storybookjs/storybook/pull/35528), thanks @FrancoKaddour!
+- Vue3 Vite: Enable Schema Extraction for Vue Component Meta - [#35565](https://github.com/storybookjs/storybook/pull/35565), thanks @dmitriy-prokoshev!
+- Vue3: Support TypeScript enum props in vue-component-meta docgen - [#35684](https://github.com/storybookjs/storybook/pull/35684), thanks @valentinpalkovic!
+- Vue: Resolve docgen per export so a type-only export does not drop a file's prop tables - [#35593](https://github.com/storybookjs/storybook/pull/35593), thanks @seanogdev!
+
 ## 10.6.0-alpha.3
 
 - Addon Vitest: Pin storybook/test in optimizeDeps so its CJS-only deps are prebundled - [#35572](https://github.com/storybookjs/storybook/pull/35572), thanks @Nic-Polumeyv!
