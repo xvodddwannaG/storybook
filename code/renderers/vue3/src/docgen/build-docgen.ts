@@ -20,39 +20,31 @@ export type VueDocgenPayload = DocgenPayload & { vueComponentMeta?: MetaSource }
 
 export interface BuildDocgenContext {
   getChecker: (componentFilePath: string) => ComponentMetaChecker;
-  resolvePath?: (importPath: string) => string;
 }
 
-const UNRESOLVED_COMPONENT_ERRORS = new Map<
+const UNRESOLVED_COMPONENT_ERRORS: Record<
   UnresolvedComponentReason,
   { name: string; message: string }
->([
-  [
-    'no-meta-component',
-    {
-      name: 'No component found',
-      message: 'We could not detect the component from your story file. Specify meta.component.',
-    },
-  ],
-  [
-    'no-component-import',
-    {
-      name: 'No component import found',
-      message: 'No component file found for the component declared in meta.component.',
-    },
-  ],
-]);
+> = {
+  'no-meta-component': {
+    name: 'No component found',
+    message: 'We could not detect the component from your story file. Specify meta.component.',
+  },
+  'no-component-import': {
+    name: 'No component import found',
+    message: 'No component file found for the component declared in meta.component.',
+  },
+};
+
+/**
+ * Get last segment of a story title
+ */
+function componentNameFromTitle(title: string): string {
+  return title.split('/').at(-1)!.replace(/\s+/g, '');
+}
 
 /**
  * Builds a {@link DocgenPayload} for the component one CSF story file documents.
- *
- * Returns `undefined` only when there is nothing to document — no story file on the entry, or the
- * file is gone from disk — which the provider chain reads as "fall through to the next provider".
- * Every other failure returns a payload carrying the error, matching the React provider: the
- * component exists in the index, so the UI should say why it has no props rather than show nothing.
- *
- * Subcomponents are not extracted yet: `meta.subcomponents` resolution lives in the React renderer's
- * private CSF helpers, and sharing it is a separate change.
  */
 export async function buildDocgenPayload(
   input: DocgenProviderInput,
@@ -63,14 +55,9 @@ export async function buildDocgenPayload(
     return undefined;
   }
 
-  const resolvePath =
-    context.resolvePath ?? ((importPath: string) => join(process.cwd(), importPath));
-  const storyPath = resolvePath(storyFilePath);
+  // Import paths in the index are relative to the project root the server runs from.
+  const storyPath = join(process.cwd(), storyFilePath);
 
-  // Read from disk rather than from a cache: the docgen service re-extracts a component when its
-  // sources change, and one story file backs one component id, so a cache would only add a
-  // staleness surface. Async so concurrent extractions (the service fans out over the index) are
-  // not serialized on the worker thread.
   let storyFile: string;
   try {
     storyFile = await readFile(storyPath, 'utf8');
@@ -79,7 +66,9 @@ export async function buildDocgenPayload(
     return undefined;
   }
 
-  const title = input.entry.title.split('/').at(-1)!.replace(/\s+/g, '');
+  // IF the story has no meta.component
+  const fallbackName = componentNameFromTitle(input.entry.title);
+
   const baseFor = (name: string) =>
     ({
       id: getComponentIdFromEntry(input.entry),
@@ -92,11 +81,8 @@ export async function buildDocgenPayload(
   try {
     csf = loadCsf(storyFile, { makeTitle: () => input.entry.title }).parse();
   } catch (error) {
-    // The indexer already parsed this file with the same loader to produce the entry, so failing
-    // here means a version skew or a bug on our side. Report it instead of returning undefined,
-    // which the chain reads as "no docgen here" and would surface as an unexplained empty panel.
     return {
-      ...baseFor(title),
+      ...baseFor(fallbackName),
       error: {
         name: 'Story file could not be parsed',
         message:
@@ -106,13 +92,11 @@ export async function buildDocgenPayload(
     };
   }
 
-  // `meta.component` is the component's local identifier in the story file — a better name than the
-  // title segment whenever it is available.
-  const base = baseFor(csf._meta?.component ?? title);
+  const base = baseFor(csf._meta?.component ?? fallbackName);
 
   const resolved = resolveMetaComponent(csf, storyPath);
   if ('reason' in resolved) {
-    const error = UNRESOLVED_COMPONENT_ERRORS.get(resolved.reason)!;
+    const error = UNRESOLVED_COMPONENT_ERRORS[resolved.reason];
     return {
       ...base,
       error: {

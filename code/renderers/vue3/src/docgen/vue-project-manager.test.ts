@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { IndexEntry } from 'storybook/internal/types';
 
@@ -19,6 +19,10 @@ const manager = new VueComponentMetaManager(ts);
 afterAll(() => manager.dispose());
 
 describe('VueComponentMetaManager', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   // The stock `create-vue` scaffold: the root tsconfig is nothing but `references`. The previous
   // single-checker path bailed to a whole-project `include: ['**/*']` fallback here (upstream:
   // vuejs/language-tools#3896); the manager walks the reference chain instead and lands on the
@@ -37,6 +41,9 @@ describe('VueComponentMetaManager', () => {
   });
 
   it('extracts docgen end to end through the manager-resolved checker', async () => {
+    // Import paths in the index are relative to the project root the server runs from.
+    vi.spyOn(process, 'cwd').mockReturnValue(referencesDir);
+
     const entry = {
       type: 'story',
       subtype: 'story',
@@ -48,10 +55,7 @@ describe('VueComponentMetaManager', () => {
 
     const payload = await buildDocgenPayload(
       { entry },
-      {
-        getChecker: (componentPath) => manager.getCheckerForFile(componentPath),
-        resolvePath: (importPath) => join(referencesDir, importPath),
-      }
+      { getChecker: (componentPath) => manager.getCheckerForFile(componentPath) }
     );
 
     expect(payload?.error).toBeUndefined();
